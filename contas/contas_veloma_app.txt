@@ -1,0 +1,17 @@
+auth@veloma.app
+Finalidade: Autenticação do sistema (confirmação de conta, reset de senha, verificação de e-mail)
+
+notifications@veloma.app
+Finalidade: Notificações do sistema ERP/CRM/SaaS (alertas, relatórios, eventos)
+
+security@veloma.app
+Finalidade: Alertas de segurança (login suspeito, alteração de senha, MFA)
+
+billing@veloma.app
+Finalidade: Faturação e pagamentos (faturas, cobrança, renovação de licença)
+
+system@veloma.app
+Finalidade: Mensagens automáticas internas do sistema
+
+noreply@veloma.app
+Finalidade: E-mails automáticos que não precisam resposta

@@ -1,0 +1,55 @@
+# COMANDOS LINUX
+sudo apt update
+sudo apt install -y libpq-dev gcc python3-dev
+sudo apt install -y python3-django
+sudo apt install -y build-essential python3-dev libpq-dev wget curl
+
+sudo mkdir -p /opt/geoip
+cd /opt/geoip
+sudo wget https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-City.mmdb
+
+sudo chmod 644 /opt/geoip/GeoLite2-City.mmdb
+
+mkdir -p /var/log/veloma
+chown -R www-data:www-data /var/log/veloma
+
+mkdir -p /opt/veloma-app
+cd veloma-app
+python3 -m venv venv 
+source venv/bin/activate
+
+pip install django
+pip install python-decouple
+pip install djangorestframework-simplejwt
+pip install django-cors-headers
+pip install psycopg2-binary
+pip install psycopg2
+pip install boto3
+pip install django-storages
+pip install django-ipware
+pip install user-agents
+pip install geoip2
+pip install requests
+pip install django-redis
+pip install celery
+pip install redis
+pip install flower
+pip install django-celery-beat
+pip install djangorestframework-simplejwt
+pip freeze > requirements.txt
+
+#
+django-admin startproject core . 
+python manage.py startapp authentication
+python manage.py startapp authentication
+python manage.py startapp services
+
+python manage.py migrate
+
+#############
+mkdir -p services/{auth,email,tasks,middleware} && \
+touch services/auth/{login_audit_service.py,login_security_service.py} && \
+touch services/email/{email_service.py,email_renderer.py,email_dispatcher.py,registry.py,types.py,exceptions.py} && \
+touch services/tasks/email_task.py && \
+touch services/middleware/request_context.py
+

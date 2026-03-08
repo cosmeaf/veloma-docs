@@ -1,0 +1,316 @@
+IPINTEL SYSTEM REQUIREMENTS
+===========================
+
+OBJECTIVE
+---------
+Create a local IP Intelligence system capable of identifying IP metadata,
+including GEOIP location, ASN organization, TOR exit nodes, proxy lists,
+and datacenter ASN detection. The system must maintain updated datasets
+automatically through scheduled updates using cron jobs and structured
+logging.
+
+SYSTEM BASE PATH
+----------------
+All system files must be located under:
+
+/opt/ipintel
+
+DIRECTORY STRUCTURE
+-------------------
+
+/opt/ipintel
+│
+├── cache
+│   └── ip_cache.json
+│
+├── datacenter
+│   └── datacenter_asn.txt
+│
+├── engine
+│   ├── api_engine.py
+│   ├── asn_engine.py
+│   ├── cache_engine.py
+│   ├── datacenter_engine.py
+│   ├── dns_engine.py
+│   ├── geoip_engine.py
+│   ├── investigation_engine.py
+│   ├── proxy_engine.py
+│   ├── risk_engine.py
+│   ├── tor_engine.py
+│   └── whois_engine.py
+│
+├── geoip
+│   ├── GeoLite2-ASN.mmdb
+│   └── GeoLite2-City.mmdb
+│
+├── logs
+│   └── ipintel.log
+│
+├── proxy
+│   └── proxy_list.txt
+│
+├── stats
+│   └── counters.json
+│
+├── tor
+│   └── exit_nodes.txt
+│
+└── update
+    ├── update_geoip.sh
+    ├── update_tor.sh
+    ├── update_proxy.sh
+    ├── update_datacenter.sh
+    └── update_all.sh
+
+
+DATASETS USED
+-------------
+
+1) GEOIP
+GeoLite2-City.mmdb
+GeoLite2-ASN.mmdb
+
+Location:
+/opt/ipintel/geoip
+
+Downloaded from public GitHub mirror:
+
+https://github.com/P3TERX/GeoLite.mmdb
+
+
+2) TOR EXIT NODES
+-----------------
+
+Stored in:
+
+/opt/ipintel/tor/exit_nodes.txt
+
+Updated daily using official TOR list.
+
+
+3) PROXY LIST
+-------------
+
+Stored in:
+
+/opt/ipintel/proxy/proxy_list.txt
+
+Downloaded from public proxy list sources.
+
+
+4) DATACENTER ASN
+-----------------
+
+Stored in:
+
+/opt/ipintel/datacenter/datacenter_asn.txt
+
+Contains ASN identifiers for cloud providers and hosting networks
+(e.g., AWS, OVH, DigitalOcean, Hetzner).
+
+
+UPDATE SYSTEM
+-------------
+
+Dataset updates are managed using bash scripts located in:
+
+/opt/ipintel/update
+
+
+SCRIPTS
+
+update_geoip.sh
+Downloads GeoLite2 ASN and City databases.
+
+update_tor.sh
+Downloads latest TOR exit node list.
+
+update_proxy.sh
+Downloads latest proxy list.
+
+update_datacenter.sh
+Updates ASN list used for datacenter detection.
+
+update_all.sh
+Master script responsible for running all update scripts.
+
+
+MASTER UPDATE SCRIPT BEHAVIOR
+-----------------------------
+
+File:
+/opt/ipintel/update/update_all.sh
+
+Requirements:
+
+1. Must log all operations.
+2. Must include timestamp.
+3. Must continue execution even if one dataset fails.
+4. Must capture stdout and stderr.
+5. Must mark SUCCESS or ERROR for each dataset.
+
+Logging format example:
+
+2026-03-08 04:00:00 | IPINTEL UPDATE START
+2026-03-08 04:00:00 | START: GEOIP
+2026-03-08 04:00:02 | SUCCESS: GEOIP
+2026-03-08 04:00:02 | START: TOR
+2026-03-08 04:00:03 | SUCCESS: TOR
+2026-03-08 04:00:03 | START: PROXY
+2026-03-08 04:00:05 | SUCCESS: PROXY
+2026-03-08 04:00:05 | START: DATACENTER
+2026-03-08 04:00:05 | SUCCESS: DATACENTER
+2026-03-08 04:00:05 | IPINTEL UPDATE FINISHED
+
+
+LOGGING
+-------
+
+Log file location:
+
+/opt/ipintel/logs/ipintel.log
+
+All update scripts must write to this file.
+
+
+CRON CONFIGURATION
+------------------
+
+Configured in system crontab:
+
+/etc/crontab
+
+
+Environment configuration:
+
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+
+Scheduled job:
+
+0 4 * * * root /opt/ipintel/update/update_all.sh
+
+
+Meaning:
+
+Runs every day at 04:00 AM.
+
+
+LOG ROTATION
+------------
+
+To prevent unlimited log growth, configure logrotate.
+
+File:
+
+/etc/logrotate.d/ipintel
+
+
+Configuration:
+
+/opt/ipintel/logs/ipintel.log {
+    weekly
+    rotate 8
+    compress
+    missingok
+    notifempty
+}
+
+
+ENGINE PURPOSE
+--------------
+
+The system provides IP intelligence capabilities including:
+
+• Country detection
+• City detection
+• ASN lookup
+• Organization identification
+• Datacenter detection
+• Proxy detection
+• TOR detection
+• Risk scoring
+
+
+ENGINES USED
+------------
+
+geoip_engine.py
+Handles GeoLite2 lookups.
+
+asn_engine.py
+ASN organization lookup.
+
+tor_engine.py
+TOR exit node detection.
+
+proxy_engine.py
+Proxy IP detection.
+
+datacenter_engine.py
+Cloud/datacenter ASN detection.
+
+risk_engine.py
+Combines multiple signals into a risk score.
+
+dns_engine.py
+Performs reverse DNS checks.
+
+whois_engine.py
+Performs WHOIS lookup.
+
+investigation_engine.py
+Central investigation logic combining all engines.
+
+
+EXPECTED SYSTEM CAPABILITIES
+----------------------------
+
+Given an IP address, the system must be able to determine:
+
+• country
+• city
+• ASN
+• organization
+• whether IP belongs to datacenter
+• whether IP is TOR exit node
+• whether IP appears in proxy lists
+• generate a combined risk score
+
+
+EXAMPLE INVESTIGATION RESULT
+----------------------------
+
+{
+  "ip": "1.2.3.4",
+  "country": "Netherlands",
+  "asn": "AS14061",
+  "organization": "DigitalOcean",
+  "datacenter": true,
+  "proxy": false,
+  "tor": false,
+  "risk_score": 72
+}
+
+
+PERMISSIONS
+-----------
+
+Update scripts must be executable:
+
+chmod +x /opt/ipintel/update/*.sh
+
+
+SYSTEM GOAL
+-----------
+
+Provide a local self-hosted IP Intelligence service comparable to
+basic functionality of services such as:
+
+• IPInfo
+• IPQualityScore
+• AbuseIPDB
+• MaxMind GeoIP
+
+while running entirely on a private server with automated dataset updates.

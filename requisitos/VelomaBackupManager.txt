@@ -1,0 +1,422 @@
+VELOMA PLATFORM
+APPLICATION: BACKUP MANAGEMENT SYSTEM
+
+SYSTEM NAME: Veloma Backup Manager
+VERSION: 1.0
+DEPLOYMENT: SELF-HOSTED VPS
+DOMAIN: monitor.veloma.app
+
+=====================================================================
+1. PURPOSE
+=====================================================================
+
+Veloma Backup Manager is a backup orchestration and monitoring system
+designed to run on a Linux VPS hosting the Veloma platform.
+
+The system provides a web interface for managing, monitoring and
+restoring platform backups.
+
+The system must ensure that critical infrastructure components can
+always be restored after server failure, data corruption or accidental
+data deletion.
+
+The application provides both automation and a visual interface for
+non-technical administrators.
+
+=====================================================================
+2. INFRASTRUCTURE CONTEXT
+=====================================================================
+
+The Veloma platform runs on a Linux VPS with Docker containers.
+
+Core components include:
+
+Django backend
+PostgreSQL database
+Redis cache
+Celery workers
+MinIO object storage
+Nginx reverse proxy
+
+All components must be included in the backup strategy.
+
+=====================================================================
+3. BACKUP TARGET COMPONENTS
+=====================================================================
+
+The system must protect the following data sources.
+
+POSTGRESQL DATABASE
+
+Contains:
+
+application data
+user records
+consent records
+audit logs
+
+Backup method:
+
+pg_dump
+
+Output format:
+
+compressed SQL dump.
+
+Example:
+
+veloma_db_2026-03-08.sql.gz
+
+------------------------------------------------------------
+
+MINIO OBJECT STORAGE
+
+Contains:
+
+legal evidence documents
+user uploads
+system files
+
+Backup method:
+
+mc mirror or rclone sync.
+
+Source bucket example:
+
+consent-evidence
+
+------------------------------------------------------------
+
+APPLICATION FILES
+
+Files to protect:
+
+/opt/veloma-app
+/opt/ipintel
+Docker compose configuration
+environment variables
+TLS certificates
+Nginx configuration
+
+Backup format:
+
+compressed tar archive.
+
+Example:
+
+veloma_config_2026-03-08.tar.gz
+
+------------------------------------------------------------
+
+DOCKER CONTAINERS
+
+Container configuration must be preserved.
+
+Required data:
+
+docker-compose.yml
+environment files
+volume configuration
+
+=====================================================================
+4. BACKUP STORAGE LOCATIONS
+=====================================================================
+
+Backups must exist in at least two locations.
+
+PRIMARY STORAGE
+
+Local VPS disk.
+
+Example path:
+
+/mnt/backups
+
+SECONDARY STORAGE
+
+Offsite backup storage.
+
+Supported providers:
+
+Google Drive
+Dropbox
+
+Backup replication tool:
+
+rclone
+
+=====================================================================
+5. BACKUP TYPES
+=====================================================================
+
+DATABASE BACKUP
+
+Runs daily.
+
+Creates PostgreSQL dump.
+
+------------------------------------------------------------
+
+OBJECT STORAGE BACKUP
+
+Runs daily.
+
+Synchronizes MinIO buckets.
+
+------------------------------------------------------------
+
+CONFIGURATION BACKUP
+
+Runs weekly.
+
+Creates archive of configuration files.
+
+------------------------------------------------------------
+
+OFFSITE REPLICATION
+
+Runs daily.
+
+Synchronizes backup directory to cloud storage.
+
+=====================================================================
+6. BACKUP ENGINE
+=====================================================================
+
+Backup execution must be implemented using shell scripts.
+
+Scripts must be stored in:
+
+/opt/veloma-backups/scripts
+
+Examples:
+
+postgres_backup.sh
+minio_backup.sh
+config_backup.sh
+offsite_sync.sh
+
+Scripts must be executable and log output.
+
+Example log path:
+
+/mnt/backups/logs
+
+=====================================================================
+7. SCRIPT EXECUTION
+=====================================================================
+
+Backup scripts must be executed by Python services.
+
+The Python service must:
+
+run shell scripts
+capture stdout and stderr
+store execution logs
+record execution status
+
+Execution must be controlled by the web application.
+
+=====================================================================
+8. DATABASE MODELS
+=====================================================================
+
+BackupJob
+
+Fields:
+
+id
+name
+job_type
+schedule
+enabled
+created_at
+
+Job types:
+
+postgres_backup
+minio_backup
+config_backup
+offsite_sync
+
+------------------------------------------------------------
+
+BackupExecution
+
+Fields:
+
+id
+job
+status
+started_at
+finished_at
+duration
+backup_size
+log_path
+
+Status values:
+
+running
+success
+failed
+
+=====================================================================
+9. WEB APPLICATION
+=====================================================================
+
+The system must provide a web interface.
+
+Access URL:
+
+monitor.veloma.app
+
+The interface must include:
+
+Dashboard
+Backup history
+Backup logs
+Manual backup execution
+Restore operations
+
+=====================================================================
+10. DASHBOARD
+=====================================================================
+
+The dashboard must show:
+
+Last successful backup
+Next scheduled backup
+Backup storage usage
+Backup health status
+
+Health indicator colors:
+
+GREEN  - backup successful
+YELLOW - backup delayed
+RED    - backup failed
+
+=====================================================================
+11. BACKUP HISTORY
+=====================================================================
+
+The interface must display backup execution history.
+
+Columns:
+
+timestamp
+backup type
+duration
+backup size
+status
+
+=====================================================================
+12. BACKUP VERIFICATION
+=====================================================================
+
+The system must verify that backups exist.
+
+Verification checks:
+
+file existence
+file size
+timestamp validity
+
+=====================================================================
+13. RESTORE OPERATIONS
+=====================================================================
+
+The system must allow restore operations through the web interface.
+
+Restore options:
+
+restore PostgreSQL database
+restore MinIO object storage
+restore configuration files
+
+=====================================================================
+14. RESTORE PROCESS
+=====================================================================
+
+When restore is triggered:
+
+the system selects a backup version
+the restore script runs
+the operation is logged
+the result is displayed in the interface
+
+=====================================================================
+15. RESTORE SAFETY
+=====================================================================
+
+Restore actions must require confirmation.
+
+Example:
+
+"Are you sure you want to restore the database?"
+
+=====================================================================
+16. EMAIL NOTIFICATIONS
+=====================================================================
+
+The system must send email alerts.
+
+Sender:
+
+no-reply@veloma.app
+
+Events:
+
+backup success
+backup failure
+restore operation executed
+
+=====================================================================
+17. MONITORING INTEGRATION
+=====================================================================
+
+The backup system must expose metrics to Prometheus.
+
+Metrics include:
+
+backup_success_total
+backup_failure_total
+backup_duration_seconds
+backup_storage_bytes
+
+Grafana dashboards must visualize these metrics.
+
+=====================================================================
+18. BACKUP RETENTION POLICY
+=====================================================================
+
+Local backups:
+
+retain 30 days.
+
+Weekly backups:
+
+retain 12 weeks.
+
+Offsite backups:
+
+retain 90 days.
+
+=====================================================================
+19. SECURITY
+=====================================================================
+
+Access to the backup manager must require authentication.
+
+Only administrators may:
+
+run backups
+execute restore operations
+modify schedules
+
+=====================================================================
+20. FINAL OBJECTIVE
+=====================================================================
+
+Provide a reliable and simple system that ensures Veloma platform
+data can always be recovered through automated backups and controlled
+restore operations.
