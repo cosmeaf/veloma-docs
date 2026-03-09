@@ -1,0 +1,48 @@
+VELoma – Plataforma de Digitalização e Automação Contabilística
+Proposta Executiva
+
+Objetivo
+Implementar uma plataforma interna para apoiar a digitalização da Veloma Contabilidade, automatizando processos operacionais, organizando documentos de clientes e melhorando a comunicação entre clientes e equipa contabilística.
+
+A solução funciona como uma camada complementar ao TOConline, focada na automação de tarefas, organização de informação e melhoria da experiência do cliente.
+
+Principais Benefícios
+
+• Redução significativa de trabalho manual
+• Maior organização de documentos e pedidos de clientes
+• Melhor comunicação e transparência com clientes
+• Aumento da produtividade da equipa
+• Preparação da empresa para um modelo de contabilidade mais digital
+
+Principais Funcionalidades Propostas
+
+1. Conversor Inteligente de Extratos Bancários
+   Sistema que converte automaticamente extratos de diferentes bancos (PDF, Excel ou CSV) para um formato compatível com TOConline, reduzindo o tempo gasto na preparação de dados.
+
+2. Envio de Documentos via QR Code
+   Cada cliente terá um QR Code exclusivo para enviar faturas e recibos diretamente para a plataforma, facilitando o envio de documentos e eliminando a necessidade de email ou WhatsApp.
+
+3. Leitura Automática de Faturas (OCR)
+   Tecnologia que lê automaticamente informações de faturas como NIF, valor, IVA e fornecedor, reduzindo o trabalho manual na análise de documentos.
+
+4. Portal do Cliente
+   Área dedicada onde o cliente pode enviar documentos, consultar informações e acompanhar pedidos realizados junto da contabilidade.
+
+5. Acompanhamento de Solicitações
+   Sistema que permite ao cliente acompanhar o estado de pedidos (ex: IRS, certidões, alterações fiscais).
+   Mesmo quando o processo depende de entidades externas como Finanças ou Segurança Social, o cliente poderá ver o estado atualizado do pedido.
+
+6. Monitorização de Obrigações Fiscais
+   Sistema que alerta automaticamente clientes sobre prazos importantes como IVA, IRC, Segurança Social e outras obrigações fiscais.
+
+7. Gestão de Consentimentos RGPD (CONSENTS)
+   Módulo para envio, recolha e armazenamento de consentimentos de proteção de dados, mantendo registo para auditorias futuras.
+
+8. Pesquisa de Satisfação de Clientes (SURVEY)
+   Ferramenta para recolher feedback dos clientes e identificar oportunidades de melhoria nos serviços prestados.
+
+9. Gestão de Tarefas e Desempenho da Equipa
+   Sistema interno para acompanhamento de tarefas da equipa contabilística, permitindo melhor distribuição de trabalho e maior eficiência operacional.
+
+Conclusão
+Esta plataforma permitirá à Veloma modernizar os seus processos internos, melhorar a experiência dos clientes e aumentar a eficiência da equipa, acompanhando a evolução da contabilidade digital.

@@ -1,0 +1,415 @@
+REQUISITO DA PRIMEIRA FASE DO PROJETO
+FUNDAÇÃO DA PLATAFORMA DE AUTENTICAÇÃO
+======================================
+
+## OBJETIVO
+
+Estabelecer a fundação técnica de um novo projeto Django voltado para
+gestão de autenticação, auditoria de login e segurança de acesso,
+utilizando uma arquitetura modular que separa claramente responsabilidades
+entre:
+
+* infraestrutura do sistema
+* interface da API
+* lógica de negócio
+* coleta de contexto de requisição
+
+Essa separação permite que o sistema seja:
+
+* escalável
+* seguro
+* auditável
+* facilmente extensível
+
+A estrutura do projeto foi organizada em três módulos principais:
+
+core            → infraestrutura do sistema
+authentication  → API de autenticação
+services        → camada de lógica e serviços internos
+
+---
+
+3. CRIAÇÃO DO AMBIENTE VIRTUAL
+
+---
+
+Requisito:
+
+O projeto deve utilizar um ambiente virtual Python (virtualenv) para
+garantir isolamento das dependências do projeto e evitar conflitos com
+bibliotecas instaladas globalmente no sistema operacional.
+
+Comandos executados:
+
+python3 -m venv venv
+source venv/bin/activate
+
+Resultado esperado:
+
+Criação do diretório:
+
+/opt/veloma-app/venv
+
+Após a ativação do ambiente virtual, todas as bibliotecas instaladas via
+pip passam a ser instaladas exclusivamente dentro desse ambiente.
+
+Objetivos:
+
+* isolamento do projeto
+* controle de dependências
+* facilidade de atualização de bibliotecas
+* evitar conflitos com pacotes do sistema
+
+---
+
+4. CRIAÇÃO DO PROJETO DJANGO
+
+---
+
+Requisito:
+
+Inicializar um novo projeto Django que servirá como base estrutural da
+aplicação.
+
+Comando executado:
+
+django-admin startproject core .
+
+Estrutura criada:
+
+/opt/veloma-app
+
+│
+├── manage.py
+└── core
+├── **init**.py
+├── settings.py
+├── urls.py
+├── asgi.py
+└── wsgi.py
+
+Responsabilidades do módulo core:
+
+* centralizar configurações globais do Django
+* definir rotas principais do sistema
+* registrar middlewares
+* configurar segurança da aplicação
+* configurar banco de dados
+* configurar cache
+* configurar logging
+* configurar autenticação
+
+O módulo core funciona como a camada de infraestrutura da aplicação.
+
+---
+
+5. INSTALAÇÃO DO DJANGO
+
+---
+
+Requisito:
+
+Garantir que o framework Django esteja disponível dentro do ambiente
+virtual do projeto.
+
+Comandos executados:
+
+apt install python3-django
+pip install django
+
+Observação:
+
+O comando via apt instala o Django no sistema operacional.
+O comando via pip instala o Django dentro do ambiente virtual do projeto.
+
+Na prática, apenas a instalação via pip é utilizada pela aplicação.
+
+Resultado esperado:
+
+O comando abaixo deve executar corretamente:
+
+python manage.py runserver
+
+---
+
+6. CRIAÇÃO DA APP DE AUTENTICAÇÃO
+
+---
+
+Requisito:
+
+Criar uma aplicação dedicada exclusivamente à gestão de autenticação e
+segurança de usuários.
+
+Comando executado:
+
+python manage.py startapp authentication
+
+Estrutura criada:
+
+authentication/
+
+├── **init**.py
+├── admin.py
+├── apps.py
+├── models.py
+├── tests.py
+└── views.py
+
+Responsabilidades da aplicação authentication:
+
+* cadastro de usuários
+* login
+* redefinição de senha
+* autenticação via API
+* geração de tokens JWT
+* controle de sessões
+* registro de eventos de login
+* auditoria de acessos
+* detecção de login suspeito
+
+Esta aplicação representa a interface da API de autenticação.
+
+---
+
+7. CRIAÇÃO DA APP SERVICES
+
+---
+
+Requisito:
+
+Criar uma aplicação responsável por centralizar a lógica de negócio e
+serviços reutilizáveis do sistema.
+
+Comando executado:
+
+python manage.py startapp services
+
+Estrutura criada:
+
+services/
+
+├── **init**.py
+├── admin.py
+├── apps.py
+├── models.py
+├── tests.py
+└── views.py
+
+Responsabilidades da aplicação services:
+
+* lógica de autenticação
+* registro de auditoria de login
+* serviços de segurança
+* detecção de login suspeito
+* envio de e-mails
+* integração com Celery
+* execução de tarefas assíncronas
+* utilitários internos da aplicação
+
+Essa camada evita que regras de negócio fiquem dentro das views.
+
+---
+
+8. IMPLEMENTAÇÃO DE MIDDLEWARE DE CONTEXTO
+
+---
+
+Durante a evolução da estrutura do projeto foi implementado um middleware
+responsável por coletar contexto técnico da requisição.
+
+Esse middleware captura informações como:
+
+* endereço IP do cliente
+* navegador utilizado
+* sistema operacional
+* tipo de dispositivo
+* localização geográfica
+
+Bibliotecas utilizadas:
+
+django-ipware
+user-agents
+geoip2
+
+O middleware adiciona ao objeto request um atributo chamado:
+
+request.audit_context
+
+Esse objeto contém:
+
+ip
+country
+city
+browser
+os
+device
+
+Essas informações são utilizadas posteriormente pelo sistema de
+autenticação para registrar eventos de login.
+
+---
+
+9. IMPLEMENTAÇÃO DE AUDITORIA DE LOGIN
+
+---
+
+Foi criada uma model chamada:
+
+LoginEvent
+
+Responsável por registrar todos os eventos de autenticação realizados
+no sistema.
+
+Campos registrados:
+
+user
+ip
+country
+city
+browser
+os
+device
+success
+created_at
+
+Esses dados permitem:
+
+* auditoria de acessos
+* rastreamento de login
+* análise de comportamento de usuário
+* detecção de login suspeito
+
+---
+
+10. DETECÇÃO DE LOGIN SUSPEITO
+
+---
+
+Foi implementado um serviço responsável por detectar acessos suspeitos.
+
+O sistema compara o login atual com o último login registrado do usuário.
+
+Critérios utilizados:
+
+* mudança de endereço IP
+* mudança de país
+* mudança de dispositivo
+
+Se qualquer uma dessas condições for detectada, o login pode ser
+classificado como suspeito.
+
+Essa funcionalidade permite futuramente:
+
+* envio de alerta por email
+* bloqueio temporário
+* verificação adicional (OTP)
+
+---
+
+11. ESTRUTURA FINAL DO PROJETO
+
+---
+
+Após a execução das etapas iniciais, a estrutura do projeto passa a ser:
+
+/opt/veloma-app
+
+│
+├── venv/
+├── manage.py
+│
+├── core
+│   ├── settings.py
+│   ├── urls.py
+│   ├── asgi.py
+│   └── wsgi.py
+│
+├── authentication
+│   ├── models.py
+│   ├── views.py
+│   ├── admin.py
+│   └── apps.py
+│
+└── services
+├── middleware
+│   └── request_context.py
+│
+├── auth
+│   ├── login_audit_service.py
+│   └── login_security_service.py
+
+---
+
+12. ARQUITETURA ADOTADA
+
+---
+
+O sistema segue a seguinte separação de responsabilidades:
+
+core
+Infraestrutura da aplicação
+
+authentication
+Interface da API de autenticação
+
+services
+Lógica de negócio e serviços internos
+
+middleware
+Coleta de contexto técnico da requisição
+
+Essa arquitetura evita:
+
+* lógica pesada dentro das views
+* duplicação de código
+* forte acoplamento entre componentes
+
+---
+
+13. ESCOPO FUNCIONAL DA PRIMEIRA FASE
+
+---
+
+Nesta fase foram implementados:
+
+* ambiente virtual Python
+* estrutura base do projeto Django
+* aplicação authentication
+* aplicação services
+* middleware de coleta de contexto
+* model de auditoria de login
+* estrutura inicial de serviços de segurança
+
+Ainda não foram implementados:
+
+* serializers
+* endpoints completos da API
+* fluxo de autenticação completo
+* envio de e-mail
+* Celery
+* Redis
+* JWT
+* OTP
+* controle de sessões
+* antifraude avançado
+
+---
+
+14. PRÓXIMOS PASSOS DO PROJETO
+
+---
+
+A próxima fase do projeto incluirá:
+
+1. criação das models completas de autenticação
+2. implementação dos serializers da API
+3. criação das views de autenticação
+4. implementação de JWT
+5. integração com Redis
+6. integração com Celery
+7. envio de e-mails de segurança
+8. verificação OTP
+9. testes completos do fluxo de autenticação
+
+# FIM

@@ -1,0 +1,463 @@
+============================================================
+VELoma – Plataforma de Automação e Digitalização Contabilística
+Proposta de Módulos Inteligentes
+============================================================
+
+Objetivo
+------------------------------------------------------------
+Criar uma plataforma interna para automatizar tarefas repetitivas
+da contabilidade, reduzir trabalho manual e melhorar a experiência
+dos clientes da Veloma Contabilidade.
+
+A plataforma não substitui o TOConline, mas funciona como uma
+camada de automação e integração para resolver limitações e
+tarefas manuais existentes atualmente.
+
+
+============================================================
+1. Conversor Inteligente de Extratos Bancários
+============================================================
+
+Problema atual
+--------------
+Os bancos fornecem extratos em diferentes formatos (PDF, Excel,
+CSV), que muitas vezes precisam ser ajustados manualmente antes
+de importar para o TOConline.
+
+Isso consome tempo do contabilista e gera risco de erro.
+
+Solução
+-------
+Criar um conversor automático que:
+
+• recebe extratos de vários bancos  
+• identifica o formato automaticamente  
+• normaliza as colunas  
+• gera ficheiro compatível com TOConline  
+
+Bancos suportados (exemplo)
+---------------------------
+Millennium BCP  
+CGD  
+Santander  
+Novo Banco  
+BPI  
+Revolut  
+Wise  
+
+Benefício
+---------
+Redução significativa do tempo gasto na preparação de extratos.
+
+
+============================================================
+2. Upload de Faturas via QR Code para Clientes
+============================================================
+
+Problema atual
+--------------
+Clientes enviam documentos por email ou WhatsApp, o que
+dificulta organização e rastreabilidade.
+
+Solução
+-------
+Cada cliente terá um QR Code exclusivo.
+
+Fluxo:
+Cliente escaneia o QR Code → abre página segura → envia foto ou
+PDF da fatura → documento fica automaticamente organizado no sistema.
+
+Benefício
+---------
+• organização automática de documentos  
+• menos emails  
+• processo mais simples para o cliente  
+
+
+============================================================
+3. Leitura Automática de Faturas (OCR)
+============================================================
+
+Problema atual
+--------------
+Os dados das faturas precisam ser verificados manualmente.
+
+Solução
+-------
+Sistema que lê automaticamente informações das faturas:
+
+• NIF  
+• valor  
+• IVA  
+• data  
+• fornecedor  
+
+Benefício
+---------
+Reduz tempo de análise e preparação de lançamentos.
+
+
+============================================================
+4. Classificação Automática de Despesas
+============================================================
+
+Problema atual
+--------------
+Classificação de despesas é um processo manual.
+
+Solução
+-------
+Sistema que aprende com o tempo e sugere classificações.
+
+Exemplos:
+
+Uber → deslocações  
+Galp → combustível  
+Amazon → material  
+Vodafone → telecomunicações  
+
+Benefício
+---------
+Acelera o processo contabilístico.
+
+
+============================================================
+5. Reconciliação Bancária Inteligente
+============================================================
+
+Problema atual
+--------------
+A reconciliação bancária exige verificação manual entre
+movimentos bancários e lançamentos contabilísticos.
+
+Solução
+-------
+Sistema que sugere correspondências automáticas com base em:
+
+• valor  
+• data  
+• descrição  
+
+Benefício
+---------
+Redução de tempo na reconciliação.
+
+
+============================================================
+6. Portal do Cliente
+============================================================
+
+Problema atual
+--------------
+Clientes não têm visibilidade clara da sua situação
+financeira e documentos enviados.
+
+Solução
+-------
+Criar um portal simples onde o cliente pode:
+
+• enviar documentos  
+• consultar documentos enviados  
+• ver indicadores financeiros básicos  
+• acompanhar pedidos  
+
+
+============================================================
+7. Sistema de Pedidos e Serviços
+============================================================
+
+Problema atual
+--------------
+Pedidos de clientes chegam por vários canais e podem
+perder-se.
+
+Solução
+-------
+Sistema interno para gerir pedidos como:
+
+• abertura de empresa  
+• alteração de dados  
+• pedidos de certidões  
+• esclarecimentos fiscais  
+
+
+============================================================
+8. Monitor de Obrigações Fiscais
+============================================================
+
+Problema atual
+--------------
+Clientes muitas vezes não sabem quando têm obrigações
+fiscais a cumprir.
+
+Solução
+-------
+Sistema que alerta automaticamente para prazos como:
+
+• IVA  
+• IRC  
+• Segurança Social  
+• IES  
+
+Benefício
+---------
+Melhor comunicação e prevenção de atrasos.
+
+
+============================================================
+9. Dashboard Financeiro Simplificado para Clientes
+============================================================
+
+Problema atual
+--------------
+Pequenas empresas têm dificuldade em interpretar relatórios
+contabilísticos.
+
+Solução
+-------
+Dashboard simples com:
+
+• receitas  
+• despesas  
+• lucro estimado  
+• impostos previstos  
+
+Benefício
+---------
+Maior transparência para o cliente.
+
+
+============================================================
+10. Captura Automática de Faturas por Email
+============================================================
+
+Problema atual
+--------------
+Muitas faturas chegam por email e precisam ser guardadas
+manualmente.
+
+Solução
+-------
+Sistema que liga ao email e identifica automaticamente
+faturas recebidas (ex: EDP, Vodafone, Amazon).
+
+Benefício
+---------
+Centralização automática de documentos.
+
+
+============================================================
+11. CONSENTS – Gestão de Consentimentos RGPD
+============================================================
+
+Objetivo
+--------
+Garantir conformidade com o Regulamento Geral de Proteção
+de Dados (RGPD).
+
+Solução
+-------
+Sistema que permite:
+
+• enviar pedidos de consentimento por email  
+• o cliente preencher digitalmente  
+• armazenar o consentimento com data e registo  
+• manter histórico para auditorias futuras  
+
+Benefício
+---------
+• conformidade com RGPD  
+• registo seguro de consentimentos  
+• facilidade em auditorias e verificações legais  
+
+
+============================================================
+12. SURVEY – Pesquisa de Satisfação de Clientes
+============================================================
+
+Objetivo
+--------
+Avaliar a satisfação dos clientes da Veloma e identificar
+oportunidades de melhoria no serviço.
+
+Solução
+-------
+Sistema para enviar pesquisas de satisfação por email.
+
+Exemplos de perguntas:
+
+• satisfação com o serviço  
+• rapidez de resposta  
+• qualidade do atendimento  
+• sugestões de melhoria  
+
+Benefício
+---------
+• melhoria contínua do serviço  
+• maior proximidade com os clientes  
+• identificação rápida de problemas  
+
+
+============================================================
+13. PERFORMANCE – Gestão de Desempenho da Equipa
+============================================================
+
+Objetivo
+--------
+Acompanhar a produtividade e distribuição de trabalho
+da equipa de forma transparente.
+
+Solução
+-------
+Sistema interno baseado em tarefas e operações realizadas.
+
+O sistema permite:
+
+• atribuir tarefas aos colaboradores  
+• acompanhar tarefas concluídas  
+• medir tempo médio por atividade  
+• identificar tarefas atrasadas  
+• visualizar carga de trabalho por funcionário  
+
+Exemplos de métricas:
+
+• número de tarefas concluídas  
+• tempo médio de execução  
+• volume de clientes por contabilista  
+• tarefas em atraso  
+
+Benefício
+---------
+• melhor gestão da equipa  
+• equilíbrio de carga de trabalho  
+• maior eficiência operacional  
+
+
+============================================================
+14. REQUEST TRACKING – Acompanhamento de Solicitações
+============================================================
+
+
+Objetivo
+--------
+Permitir que clientes acompanhem o progresso de pedidos
+administrativos ou fiscais feitos pela contabilidade.
+
+Problema atual
+--------------
+Clientes muitas vezes solicitam serviços que dependem de
+entidades externas (Finanças, Segurança Social, bancos),
+e não conseguem acompanhar o estado do processo.
+
+Isso gera dúvidas, emails e contactos frequentes.
+
+Solução
+-------
+Criar um sistema de acompanhamento de pedidos onde o cliente
+pode visualizar o estado da solicitação em tempo real.
+
+Exemplos de pedidos:
+
+• IRS  
+• certidões  
+• alterações fiscais  
+• abertura ou alteração de atividade  
+• pedidos junto à Autoridade Tributária  
+
+Exemplos de status:
+
+Recebido  
+Em análise  
+Submetido na entidade  
+Aguardando resposta  
+Concluído  
+
+Benefício
+---------
+• maior transparência com o cliente  
+• redução de contactos repetitivos  
+• melhor organização interna  
+
+
+============================================================
+15. Atendimento Digital e Captação de Clientes
+============================================================
+
+Objetivo
+--------
+Facilitar o contacto entre clientes e a Veloma Contabilidade,
+modernizando o atendimento e tornando o processo de contacto
+mais rápido e simples.
+
+A ideia é permitir que clientes e potenciais clientes possam
+entrar em contacto através de vários canais digitais e receber
+respostas rápidas.
+
+Canais de contacto
+------------------
+Os clientes poderão entrar em contacto através de:
+
+• Website da Veloma
+• WhatsApp
+• Instagram
+• Facebook
+• Google Business
+• Telegram
+
+Todos os contactos serão centralizados num único sistema
+interno para garantir organização e rapidez no atendimento.
+
+Atendimento inicial automatizado
+--------------------------------
+O sistema poderá responder automaticamente a perguntas
+frequentes como:
+
+• informações sobre serviços
+• documentação necessária para abertura de empresa
+• esclarecimentos iniciais sobre IRS
+• horários de atendimento
+
+Caso necessário, o cliente será encaminhado para um membro
+da equipa da Veloma.
+
+Agendamento de reuniões
+-----------------------
+O cliente poderá agendar uma reunião diretamente online,
+escolhendo um horário disponível.
+
+A reunião será automaticamente criada no Microsoft Teams,
+facilitando reuniões à distância quando necessário.
+
+Respostas fora do horário
+-------------------------
+Se o cliente enviar mensagem fora do horário de atendimento,
+o sistema informa automaticamente quando a equipa irá responder.
+
+Exemplo:
+
+"Obrigado pelo seu contacto.
+O nosso horário de atendimento é de segunda a sexta,
+das 09:00 às 18:00. Responderemos assim que possível."
+
+Benefícios
+----------
+• atendimento mais rápido e organizado
+• facilidade de contacto para clientes
+• modernização do serviço prestado pela Veloma
+• melhor experiência para quem procura apoio contabilístico
+
+============================================================
+Conclusão
+============================================================
+
+Esta plataforma permitirá à Veloma:
+
+• reduzir trabalho manual  
+• organizar documentos de clientes  
+• melhorar produtividade interna  
+• aumentar eficiência da equipa  
+• melhorar experiência do cliente  
+• preparar a empresa para contabilidade digital
+
+A implementação pode ser feita por módulos, começando
+pelos de maior impacto operacional.

@@ -1,0 +1,334 @@
+PROJECT CONTEXT
+===============
+
+Existing production platform located at:
+
+/opt/veloma-app/
+
+The system is a Django backend with a React/Vite frontend (veloma-web).
+
+Main components already implemented:
+
+/opt/veloma-app/
+│
+├── core/settings.py
+│       Main Django configuration
+│
+├── authentication/
+│       Custom authentication system
+│       Uses SimpleJWT
+│       Custom login / permissions
+│
+├── services/
+│       Custom service layer using OOP
+│       Example:
+│       services/email/email_service.py
+│
+└── external engines
+        /opt/ipintel
+        Custom threat intelligence engine
+
+Example structure:
+
+/opt/ipintel/
+    engine/
+        api_engine.py
+        asn_engine.py
+        cache_engine.py
+        datacenter_engine.py
+        dns_engine.py
+        geoip_engine.py
+        investigation_engine.py
+        proxy_engine.py
+        risk_engine.py
+        tor_engine.py
+        whois_engine.py
+
+The architecture follows a **service-oriented modular design**.
+
+Business logic must NEVER be placed inside views.
+
+
+AUTHENTICATION MODEL
+====================
+
+Authentication is already implemented using:
+
+SimpleJWT
+
+User roles:
+
+USER
+STAFF
+ADMIN
+
+Permissions:
+
+USER
+    Cannot access statement conversion features
+
+STAFF
+    Can upload and process bank statements
+    Can only access their own processing jobs
+
+ADMIN
+    Full CRUD access
+    Can see all users processing jobs
+    Can manage templates
+
+
+NEW APPLICATION
+===============
+
+Create a new Django application called:
+
+statement_engine
+
+
+Purpose
+-------
+
+Convert Portuguese bank statement PDFs into the TOCOnline accounting format.
+
+The system must:
+
+1) Receive bank statement PDFs
+2) Extract transaction data
+3) Insert the data into a TOCOnline Excel template
+4) Provide the processed file for download
+5) Maintain a full processing history
+
+
+IMPORTANT
+
+Extraction logic already exists and will be injected later.
+
+You only need to create the **architecture and processing pipeline**.
+
+
+TECH STACK
+==========
+
+Backend:
+
+Django
+Django REST Framework
+Celery
+Redis
+OpenPyXL
+Python 3.12
+
+Frontend (already exists):
+
+React
+Vite
+
+
+APPLICATION STRUCTURE
+=====================
+
+Create the following structure:
+
+statement_engine/
+
+    models/
+        statement_job.py
+        statement_template.py
+        processing_log.py
+
+    serializers/
+        statement_serializer.py
+        statement_detail_serializer.py
+        template_serializer.py
+
+    views/
+        statement_viewset.py
+        template_viewset.py
+
+    permissions/
+        staff_only.py
+
+    tasks/
+        process_statement.py
+
+    pipeline/
+        pipeline.py
+
+    services/
+        template_service.py
+        template_clone.py
+        toc_writer.py
+
+    utils/
+        extractor_adapter.py
+
+    management/
+        commands/
+            cleanup_statements.py
+
+
+DATABASE MODELS
+===============
+
+Model 1: StatementTemplate
+
+Purpose:
+Store TOCOnline Excel templates uploaded by STAFF or ADMIN.
+
+Fields:
+
+id (UUID)
+name
+version
+template_file (FileField)
+active (Boolean)
+uploaded_by (User FK)
+created_at
+
+
+Model 2: StatementJob
+
+Purpose:
+Represents one processing job.
+
+Fields:
+
+id (UUID)
+owner (User FK)
+template (FK StatementTemplate)
+bank
+original_pdf (FileField)
+result_file (FileField)
+status
+created_at
+processed_at
+error
+
+
+Model 3: StatementProcessingLog
+
+Purpose:
+Track pipeline steps for debugging and auditing.
+
+Fields:
+
+job (FK StatementJob)
+step
+message
+created_at
+
+
+PROCESSING PIPELINE
+===================
+
+The processing workflow must be:
+
+Upload PDF
+    ↓
+Create StatementJob
+    ↓
+Send task to Celery
+    ↓
+Run processing pipeline
+
+Pipeline steps:
+
+1 Validate PDF
+2 Extract transactions
+3 Get active template
+4 Clone template
+5 Insert extracted transactions
+6 Save result file
+7 Update job status
+
+
+TEMPLATE SYSTEM
+===============
+
+Templates must be stored in MEDIA:
+
+media/
+
+    statement_templates/
+        template_v1.xlsx
+
+    statements/
+
+        original/
+            uuid.pdf
+
+        processed/
+            uuid.xlsx
+
+
+Important rule:
+
+The template file must NEVER be modified directly.
+
+Instead:
+
+1 Copy template
+2 Insert extracted data
+3 Save new file
+
+
+API ENDPOINTS
+=============
+
+Create DRF endpoints:
+
+POST   /api/statements/
+GET    /api/statements/
+GET    /api/statements/{id}
+DELETE /api/statements/{id}
+
+Templates:
+
+POST   /api/statement-templates/
+GET    /api/statement-templates/
+
+
+PERMISSION RULES
+================
+
+USER
+    No access
+
+STAFF
+    CRUD only their own jobs
+
+ADMIN
+    Full CRUD
+    Manage templates
+
+
+CODE STANDARDS
+==============
+
+Follow these rules:
+
+• Business logic must be placed in services or pipeline
+• Views must remain thin
+• Use UUIDs for all primary keys
+• Use Celery for heavy processing
+• Use OpenPyXL for Excel manipulation
+• Maintain processing logs
+• Follow modular architecture
+
+
+DELIVERABLE
+===========
+
+Generate all code necessary to implement this new Django application,
+including:
+
+models
+serializers
+viewsets
+permissions
+pipeline
+celery tasks
+services
+management command
+
+The code must integrate cleanly with the existing Veloma backend.

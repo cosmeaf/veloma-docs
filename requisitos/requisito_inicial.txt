@@ -1,0 +1,57 @@
+ok,
+Hoje eu tenho uma plataforma com as informações abaixo, com isso, por favor criar requisitos para criar nova aplicação em formato prompt para IA que esteja em Frame .txt
+
+/opt/veloma-app/
+core/settings.py = Core
+authentication/ = Sistema de autenticação Custumizado com sismpelJWT
+services/ = Serviço de email custumizado POO, para lógicas novas separadas e custumizada
+/opt/ipintel = Custumizado para atender o projeto acima
+
+# /opt/veloma-app/services/email/email_service.py
+
+(venv) root@srv697040:/opt/veloma-app# tree -L 3 /opt/ipintel/
+/opt/ipintel/
+├── cache
+│   └── ip_cache.json
+├── datacenter
+│   └── datacenter_asn.txt
+├── engine
+│   ├── __pycache__
+│   │   ├── api_engine.cpython-312.pyc
+│   │   ├── asn_engine.cpython-312.pyc
+│   │   ├── datacenter_engine.cpython-312.pyc
+│   │   ├── dns_engine.cpython-312.pyc
+│   │   ├── geoip_engine.cpython-312.pyc
+│   │   ├── investigation_engine.cpython-312.pyc
+│   │   ├── proxy_engine.cpython-312.pyc
+│   │   ├── risk_engine.cpython-312.pyc
+│   │   ├── tor_engine.cpython-312.pyc
+│   │   └── whois_engine.cpython-312.pyc
+│   ├── api_engine.py
+│   ├── asn_engine.py
+│   ├── cache_engine.py
+│   ├── datacenter_engine.py
+│   ├── dns_engine.py
+│   ├── geoip_engine.py
+│   ├── investigation_engine.py
+│   ├── proxy_engine.py
+│   ├── risk_engine.py
+│   ├── tor_engine.py
+│   └── whois_engine.py
+├── geoip
+├── logs
+│   └── ipintel.log
+├── proxy
+│   └── proxy_list.txt
+├── stats
+│   └── counters.json
+├── tor
+│   └── exit_nodes.txt
+└── update
+    ├── update_datacenter.sh
+    ├── update_geoip.sh
+    ├── update_proxy.sh
+    └── update_tor.sh
+
+
+

@@ -1,0 +1,499 @@
+REQUISITOS TÉCNICOS – REFATORAÇÃO DO AUTHENTICATION + IPINTEL
+=============================================================
+
+OBJETIVO GERAL
+--------------
+Refatorar a aplicação de autenticação existente, mantendo a lógica já funcional,
+preservando a compatibilidade com o frontend atual e adicionando uma camada
+mais robusta de segurança, auditoria e investigação de acessos baseada em IP.
+
+A solução será composta por dois blocos separados:
+
+1. authentication
+   - App Django responsável por autenticação, sessões, recuperação de senha,
+     OTP, reset de senha, auditoria e regras de segurança.
+
+2. ipintel
+   - Engine externa responsável por investigação e classificação de IPs,
+     incluindo GeoIP, ASN, TOR, Proxy, Datacenter, WHOIS, Reverse DNS,
+     fallback por API gratuita e risk score.
+
+======================================================================
+1. REQUISITOS OBRIGATÓRIOS DO AUTHENTICATION
+======================================================================
+
+1.1 Compatibilidade com o frontend
+----------------------------------
+O endpoint de login DEVE manter exatamente o mesmo formato de resposta já usado
+atualmente no frontend, pois os dados são usados no Bearer token, localStorage
+e store do frontend.
+
+Formato obrigatório do login:
+
+{
+  "access": "jwt-token",
+  "refresh": "refresh-token",
+  "user": {
+    "id": 1,
+    "email": "user@email.com",
+    "first_name": "",
+    "last_name": "",
+    "role": "user",
+    "is_staff": false,
+    "is_superuser": false,
+    "is_active": true
+  }
+}
+
+Não alterar esse contrato.
+
+1.2 Funcionalidades obrigatórias
+--------------------------------
+O novo authentication deve manter e melhorar tudo que já existe:
+
+- register
+- login
+- logout
+- recovery
+- otp verify
+- reset password
+- endpoint /me/
+- block user
+- controle de sessões
+- auditoria de login
+- proteção contra brute force
+- envio de e-mails
+
+1.3 Serviço de e-mail
+---------------------
+O sistema DEVE continuar usando o EmailService já existente no projeto.
+
+Padrão atual a ser mantido:
+EmailService.send(template_key=..., to=[...], context={...})
+
+Templates esperados:
+- welcome
+- login_alert
+- security_login_alert
+- password_recovery
+- password_changed
+
+A lógica de envio de e-mail não deve ser removida.
+Deve apenas ser reorganizada para a camada de services.
+
+1.4 Separação de responsabilidades
+----------------------------------
+A lógica de negócio não deve mais ficar em serializers.
+
+Nova separação obrigatória:
+
+- models       -> persistência
+- serializers  -> validação de entrada
+- views        -> endpoints
+- services     -> regras de negócio
+- middleware   -> validações de segurança em request
+- dto          -> formato de saída padronizado
+
+1.5 Estrutura obrigatória do app authentication
+-----------------------------------------------
+/opt/veloma-app/authentication
+│
+├── models
+│   ├── __init__.py
+│   ├── login_attempt.py
+│   ├── login_event.py
+│   ├── otp_code.py
+│   ├── reset_password_token.py
+│   ├── user_session.py
+│   ├── user_device.py
+│   └── security_settings.py
+│
+├── serializers
+│   ├── __init__.py
+│   ├── login.py
+│   ├── register.py
+│   ├── logout.py
+│   ├── recovery.py
+│   ├── otp_verify.py
+│   └── reset_password.py
+│
+├── views
+│   ├── __init__.py
+│   ├── login.py
+│   ├── register.py
+│   ├── logout.py
+│   ├── recovery.py
+│   ├── otp_verify.py
+│   ├── reset_password.py
+│   ├── me.py
+│   └── block_user.py
+│
+├── services
+│   ├── __init__.py
+│   ├── auth_service.py
+│   ├── register_service.py
+│   ├── recovery_service.py
+│   ├── otp_service.py
+│   ├── password_service.py
+│   ├── session_service.py
+│   ├── token_service.py
+│   ├── login_attempt_service.py
+│   ├── login_audit_service.py
+│   ├── login_security_service.py
+│   ├── device_service.py
+│   ├── security_settings_service.py
+│   └── ip_intelligence_service.py
+│
+├── middleware
+│   ├── __init__.py
+│   └── session_validation.py
+│
+├── dto
+│   ├── __init__.py
+│   └── user_dto.py
+│
+├── admin.py
+├── apps.py
+└── urls.py
+
+1.6 Models obrigatórios
+-----------------------
+Devem existir e ser usados:
+
+- LoginAttempt
+  Controle de tentativas por e-mail + IP.
+  Deve permitir bloqueio temporário após falhas sucessivas.
+
+- LoginEvent
+  Auditoria completa dos eventos de login, com sucesso/falha, IP, país,
+  cidade, ASN, browser, sistema operacional, device e risk_score.
+
+- OtpCode
+  Código temporário de recuperação, com validade e marcação de uso.
+
+- ResetPasswordToken
+  Token de redefinição de senha com validade e marcação de uso.
+
+- UserSession
+  Sessão real vinculada ao JWT, com session_id, token_jti, IP, user agent,
+  browser, os, device, country, city, asn, risk_score e flag de sessão ativa.
+
+- UserDevice
+  Registro e fingerprint de dispositivos usados pelo usuário.
+
+- SecuritySettings
+  Configuração de segurança por usuário, como:
+  - max_sessions
+  - otp_enabled
+  - email_alerts
+  - require_otp_for_new_device
+  - block_high_risk_login
+
+1.7 Regras de segurança obrigatórias
+------------------------------------
+- Limite de sessões simultâneas por usuário
+- Validação de sessão ativa a cada request autenticado
+- Proteção contra brute force
+- Registro de auditoria para login com sucesso e falha
+- Detecção de login suspeito
+- Notificação por e-mail de novo login
+- Notificação por e-mail de login suspeito
+- Possibilidade de revogar sessões
+- Revogação de todas as sessões após reset de senha
+
+1.8 Middleware obrigatório
+--------------------------
+Criar middleware de validação de sessão autenticada.
+
+Regra:
+- Todo JWT deve conter session_id
+- O session_id deve existir em UserSession
+- A sessão deve estar ativa
+- Se a sessão estiver revogada, o token não deve funcionar
+
+1.9 Services obrigatórios
+-------------------------
+- AuthService
+  Login principal, autenticação, auditoria, risco, sessão e token.
+
+- RegisterService
+  Cadastro de usuário, associação de grupo e e-mail de boas-vindas.
+
+- RecoveryService / OTPService
+  Fluxo de recuperação de senha e envio de OTP.
+
+- PasswordService
+  Reset de senha com invalidação do token e revogação de sessões.
+
+- SessionService
+  Controle completo de sessões.
+
+- TokenService
+  Geração de access/refresh token mantendo o contrato atual.
+
+- LoginAttemptService
+  Rate limit e brute force por IP/e-mail.
+
+- LoginAuditService
+  Registro de eventos.
+
+- LoginSecurityService
+  Avaliação de login suspeito e disparo de alertas.
+
+- DeviceService
+  Fingerprint e rastreamento de devices.
+
+- SecuritySettingsService
+  Carregamento/criação das configurações do usuário.
+
+- IPIntelligenceService
+  Adaptador entre Django e /opt/ipintel.
+
+1.10 DTO obrigatório
+--------------------
+Criar UserDTO para garantir o mesmo payload usado hoje no frontend:
+
+- id
+- email
+- first_name
+- last_name
+- role
+- is_staff
+- is_superuser
+- is_active
+
+======================================================================
+2. REQUISITOS OBRIGATÓRIOS DO IPINTEL
+======================================================================
+
+2.1 Objetivo
+------------
+Criar uma engine externa de investigação de IP para apoiar o authentication
+em decisões de risco e auditoria.
+
+2.2 Estrutura obrigatória
+-------------------------
+/opt/ipintel
+│
+├── engine
+│   ├── __init__.py
+│   ├── cache_engine.py
+│   ├── geoip_engine.py
+│   ├── asn_engine.py
+│   ├── tor_engine.py
+│   ├── proxy_engine.py
+│   ├── datacenter_engine.py
+│   ├── dns_engine.py
+│   ├── whois_engine.py
+│   ├── api_engine.py
+│   ├── risk_engine.py
+│   └── investigation_engine.py
+│
+├── geoip
+│   ├── GeoLite2-City.mmdb
+│   ├── GeoLite2-Country.mmdb
+│   └── GeoLite2-ASN.mmdb
+│
+├── tor
+│   └── exit_nodes.txt
+│
+├── proxy
+│   └── proxy_list.txt
+│
+├── datacenter
+│   └── datacenter_asn.txt
+│
+├── cache
+│   └── ip_cache.json
+│
+├── stats
+│   └── counters.json
+│
+├── logs
+│   └── ipintel.log
+│
+├── update
+│   ├── update_geoip.sh
+│   ├── update_tor.sh
+│   ├── update_proxy.sh
+│   └── update_datacenter.sh
+│
+└── README.md
+
+2.3 Fontes e validadores
+------------------------
+A investigação de IP deve funcionar com múltiplas camadas:
+
+1. Cache local
+2. Base local MaxMind GeoLite2
+3. ASN local
+4. Lista de TOR exit nodes
+5. Lista de proxies públicos
+6. Lista de ASN de datacenter/cloud providers
+7. Reverse DNS
+8. WHOIS
+9. API externa gratuita como fallback
+
+2.4 Funcionalidades obrigatórias
+--------------------------------
+- Identificar país, cidade e coordenadas aproximadas
+- Identificar ASN e organização
+- Verificar se IP é TOR
+- Verificar se IP é proxy
+- Verificar se ASN é de datacenter
+- Obter reverse DNS
+- Obter WHOIS
+- Aplicar fallback por API gratuita
+- Gerar risk_score
+- Registrar cache local
+- Ter scripts de atualização via cron
+
+2.5 Risk score obrigatório
+--------------------------
+A engine deve calcular uma pontuação de risco com base em regras como:
+
+- TOR
+- Proxy
+- Datacenter
+- GeoIP ausente
+- Reverse DNS de provedor cloud
+- Outras evidências futuras
+
+Resultado esperado:
+- risk_score
+- risk_reasons
+
+2.6 Uso no authentication
+-------------------------
+O authentication deve consumir o ipintel por meio do service:
+authentication/services/ip_intelligence_service.py
+
+O resultado deve ser usado internamente para:
+- auditoria
+- risk_score da sessão
+- envio de alerta
+- detecção de login suspeito
+
+Esses dados NÃO devem quebrar o payload atual do frontend.
+
+======================================================================
+3. PASSO A PASSO RESUMIDO DE IMPLEMENTAÇÃO
+======================================================================
+
+PASSO 1
+-------
+Fazer backup do app authentication atual.
+
+PASSO 2
+-------
+Criar a nova estrutura do app authentication com pastas:
+models, serializers, views, services, middleware e dto.
+
+PASSO 3
+-------
+Migrar os models atuais para arquivos separados sem perder a lógica existente.
+
+PASSO 4
+-------
+Criar UserDTO para manter exatamente o payload usado hoje pelo frontend.
+
+PASSO 5
+-------
+Mover a lógica hoje existente nos serializers para services:
+- login
+- register
+- recovery
+- otp verify
+- reset password
+- logout
+
+PASSO 6
+-------
+Manter o EmailService existente e reaproveitar os mesmos templates e a mesma
+forma de envio que já funciona hoje.
+
+PASSO 7
+-------
+Criar SessionService e TokenService mantendo o formato atual do retorno do login.
+
+PASSO 8
+-------
+Criar middleware de validação de sessão para garantir que tokens revogados
+não funcionem.
+
+PASSO 9
+-------
+Criar a estrutura externa /opt/ipintel.
+
+PASSO 10
+--------
+Implementar os engines:
+- cache_engine
+- geoip_engine
+- asn_engine
+- tor_engine
+- proxy_engine
+- datacenter_engine
+- dns_engine
+- whois_engine
+- api_engine
+- risk_engine
+- investigation_engine
+
+PASSO 11
+--------
+Criar scripts de atualização:
+- update_geoip.sh
+- update_tor.sh
+- update_proxy.sh
+- update_datacenter.sh
+
+PASSO 12
+--------
+Configurar crontab para atualização periódica dos datasets do ipintel.
+
+PASSO 13
+--------
+Integrar authentication com ipintel via IPIntelligenceService.
+
+PASSO 14
+--------
+Garantir que o login continue retornando:
+- access
+- refresh
+- user
+
+PASSO 15
+--------
+Testar endpoints nesta ordem:
+1. register
+2. login
+3. logout
+4. recovery
+5. otp-verify
+6. reset-password
+7. me
+8. block-user
+
+PASSO 16
+--------
+Validar cenários de segurança:
+- senha inválida repetidas vezes
+- sessão revogada
+- login de IP suspeito
+- login de novo dispositivo
+- reset de senha com revogação de sessões
+
+======================================================================
+4. RESULTADO ESPERADO
+======================================================================
+
+Ao final, o sistema deve entregar:
+
+- mesma compatibilidade de API com o frontend atual
+- segurança superior ao auth atual
+- arquitetura mais limpa e profissional
+- investigação de IP desacoplada do Django
+- manutenção facilitada
+- auditoria completa de acessos
+- base pronta para futuras evoluções de segurança

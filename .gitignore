@@ -1,0 +1,11 @@
+# Created by https://www.toptal.com/developers/gitignore/api/django
+# Edit at https://www.toptal.com/developers/gitignore?templates=django
+
+# Environments
+.env
+.env.*
+secrets
+keys
+tokens
+smtp credentials
+private keys.env
