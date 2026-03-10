@@ -1,465 +1,355 @@
-VELOMA PLATFORM — LEGAL CONSENT SYSTEM
-APPLICATION: CONSENTS
-SPECIFICATION VERSION: 9.0
-CLASSIFICATION: FORENSIC-GRADE DIGITAL EVIDENCE PLATFORM
+You are a senior Django backend engineer.
 
-=====================================================================
-SYSTEM CONTEXT
-=====================================================================
+Your task is to generate a COMPLETE production-ready Django REST backend.
 
-You are implementing a Django application called:
+Do not summarize.
+Do not skip files.
+Return full source code.
 
-consents
+Use Python + Django + Django REST Framework.
 
-inside the Veloma platform located at:
+Project root:
 
 /opt/veloma-app/
 
-Existing platform modules:
+====================================================================
+PROJECT GOAL
+====================================================================
 
-authentication/
-core/
-services/
+Implement a legal consent tracking system and user onboarding profile
+system.
 
-Infrastructure already available:
+Authentication already exists.
 
-PostgreSQL
-Redis
-Celery
-MinIO S3 Object Storage
-Docker environment
-Portainer
-ipintel network intelligence engine
+DO NOT implement authentication.
 
-The system must integrate with the existing Veloma architecture.
+All endpoints must rely on the existing authentication system.
 
-Existing services MUST be reused.
+====================================================================
+ARCHITECTURE RULES
+====================================================================
 
-=====================================================================
-SYSTEM OBJECTIVE
-=====================================================================
+1. Use Django REST Framework.
 
-Implement a legally defensible digital consent platform designed for
-accounting offices operating under GDPR/RGPD compliance.
+2. Only ModelViewSet is allowed.
 
-The system must generate legally admissible digital evidence proving:
+3. APIView must never be used.
 
-identity of the authorizing party
-date and time of authorization
-device used during authorization
-network origin (IP, ASN, geo)
-exact legal terms accepted
-document integrity
-cryptographic authenticity
-trusted timestamp proof
-long-term archival integrity
-external proof of existence
+4. Endpoints must be exposed via routers.
 
-The platform must provide forensic-grade evidence capable of supporting:
+5. Every endpoint must use:
 
-regulatory audits
-tax authority inspections
-legal disputes
-forensic investigations
+permission_classes = [IsAuthenticated]
 
-=====================================================================
-EVIDENCE REQUIREMENTS
-=====================================================================
+6. Access rules:
 
-The system must guarantee:
+Staff / Superuser
+→ can see all records
 
-legal terms cannot be modified after acceptance
-documents cannot be replaced
-audit history cannot be altered
-evidence integrity can be verified at any time
-external third parties can verify authenticity
+Regular user
+→ can only access their own records
 
-Evidence must include:
+7. Business logic must not exist in Django core.
 
-cryptographic document hash
-digital signature
-trusted timestamp
-device fingerprint
-network intelligence snapshot
-Merkle proof
-blockchain anchor proof
+8. Shared utilities must be placed inside:
 
-=====================================================================
-APPLICATION STRUCTURE
-=====================================================================
+service/
 
-Create Django application:
+====================================================================
+EXISTING NETWORK INTELLIGENCE TOOL
+====================================================================
 
-consents
+The system already contains:
 
-Location:
+/opt/ipintel
 
-/opt/veloma-app/consents
+It injects metadata into the request object.
 
-Structure:
+Fields available:
+
+request.intel.ip
+request.intel.country
+request.intel.city
+request.intel.asn
+request.intel.isp
+request.intel.is_proxy
+request.intel.user_agent
+
+These values must be used when recording legal consent acceptance.
+
+Do NOT import ipintel directly.
+
+====================================================================
+DIRECTORY STRUCTURE
+====================================================================
+
+Generate this structure:
+
+service/
+    __init__.py
 
 consents/
+    __init__.py
+    apps.py
+    models.py
+    serializers.py
+    views.py
+    admin.py
+    urls.py
+    migrations/
 
-    models/
-        term.py
-        term_version.py
-        consent.py
-        consent_version.py
-        consent_evidence.py
-        consent_event.py
+user_profile/
+    __init__.py
+    apps.py
+    models.py
+    serializers.py
+    views.py
+    signals.py
+    admin.py
+    urls.py
+    migrations/
 
-    serializers/
-        term_serializer.py
-        consent_serializer.py
-        sign_serializer.py
-        verify_serializer.py
+====================================================================
+CONSENTS MODELS
+====================================================================
 
-    views/
-        consent_viewset.py
-        public_consent_api.py
-        verification_api.py
-        audit_api.py
-        evidence_export_api.py
+Create the following models.
 
-    services/
-        consent_service.py
-        consent_sign_service.py
-        evidence_service.py
-        pdf_service.py
-        pki_service.py
-        crypto_service.py
-        ipintel_service.py
-        device_fingerprint_service.py
-        storage_service.py
-        timestamp_service.py
-        verification_service.py
-        event_chain_service.py
-        merkle_service.py
-        merkle_batch_service.py
-        blockchain_anchor_service.py
-        tamper_scan_service.py
-        evidence_package_service.py
-
-    admin/
-        term_admin.py
-        consent_admin.py
-        evidence_admin.py
-
-    templates/
-        consents/
-            consent_pdf.html
-            email_consent_request.html
-
-=====================================================================
-OBJECT STORAGE (MINIO)
-=====================================================================
-
-All evidence documents must be stored in MinIO S3.
-
-Bucket:
-
-consent-evidence
-
-Requirements:
-
-versioning enabled
-object lock enabled
-retention policy enabled
-
-Object Lock Mode:
-
-GOVERNANCE
-
-Retention:
-
-10 years
-
-This ensures:
-
-Write Once Read Many (WORM)
-
-Evidence documents cannot be modified after upload.
-
-=====================================================================
-CONSENT MODEL
-=====================================================================
-
-Consent represents a legal authorization request.
+ConsentTerm
 
 Fields:
 
-token_hash
-owner
+slug = models.SlugField(unique=True)
+title = models.CharField(max_length=255)
+required = models.BooleanField(default=True)
+active = models.BooleanField(default=True)
+created_at = models.DateTimeField(auto_now_add=True)
 
-client_name
-client_email
-client_tax_id
-client_company
-client_phone
+--------------------------------------------------------------------
 
-status
-expires_at
-
-opened_at
-signed_at
-
-ip_open
-ip_signed
-
-user_agent_open
-user_agent_signed
-
-device_fingerprint
-
-email_sent_at
-last_email_sent
-
-created_at
-
-Status values:
-
-pending
-sent
-opened
-signed
-expired
-revoked
-
-After signing:
-
-token_hash must be deleted.
-
-=====================================================================
-LEGAL TERM VERSIONING
-=====================================================================
-
-Legal terms must be versioned.
-
-TermVersion fields:
-
-term
-version
-title
-content
-content_hash
-active
-created_at
-
-content_hash = SHA256(content)
-
-This ensures legal text immutability.
-
-=====================================================================
-CONSENT EVIDENCE
-=====================================================================
-
-ConsentEvidence stores forensic proof.
+ConsentVersion
 
 Fields:
 
-consent
-document_s3_key
-document_hash_sha256
-document_signature
-timestamp_token
-terms_hash_snapshot
-snapshot_json
-merkle_leaf_hash
-blockchain_anchor_tx
+term = models.ForeignKey(ConsentTerm, on_delete=models.CASCADE, related_name="versions")
+version = models.CharField(max_length=50)
+content = models.TextField()
+document_hash = models.CharField(max_length=64, editable=False)
+active = models.BooleanField(default=True)
+created_at = models.DateTimeField(auto_now_add=True)
+
+Constraint:
+
+unique(term, version)
+
+Override save() to generate SHA256 hash.
+
+--------------------------------------------------------------------
+
+UserConsent
+
+Fields:
+
+user = models.ForeignKey(User, on_delete=models.CASCADE)
+term = models.ForeignKey(ConsentTerm, on_delete=models.CASCADE)
+version = models.ForeignKey(ConsentVersion, on_delete=models.CASCADE)
+
+accepted = models.BooleanField(default=True)
+accepted_at = models.DateTimeField(auto_now_add=True)
+
+document_hash = models.CharField(max_length=64)
+
+Audit metadata:
+
+ip = models.GenericIPAddressField()
+user_agent = models.TextField()
+
+country = models.CharField(max_length=120)
+city = models.CharField(max_length=120)
+
+asn = models.CharField(max_length=50)
+isp = models.CharField(max_length=120)
+
+is_proxy = models.BooleanField(default=False)
+
+created_at = models.DateTimeField(auto_now_add=True)
+
+Constraint:
+
+unique(user, version)
+
+====================================================================
+SERIALIZERS
+====================================================================
+
+Implement:
+
+ConsentTermSerializer
+ConsentVersionSerializer
+UserConsentSerializer
+
+UserConsentSerializer must:
+
+Automatically assign request.user.
+
+Copy document_hash from version.
+
+Read network metadata from request.intel.
+
+Fields saved:
+
+ip
+country
+city
+asn
+isp
+is_proxy
+user_agent
+
+====================================================================
+VIEWSETS
+====================================================================
+
+Implement ModelViewSets.
+
+ConsentTermViewSet
+ConsentVersionViewSet
+UserConsentViewSet
+
+Permission:
+
+IsAuthenticated
+
+Query rules:
+
+Staff → all records
+User → only their own UserConsent
+
+====================================================================
+CUSTOM ENDPOINT
+====================================================================
+
+Implement a custom action:
+
+GET /api/user-consents/status/
+
+Logic:
+
+Find required active terms.
+
+Get latest version for each term.
+
+Check if user accepted.
+
+Return:
+
+{
+ "accepted_all": false,
+ "missing_terms": []
+}
+
+====================================================================
+USER PROFILE MODELS
+====================================================================
+
+Person
+
+Fields:
+
+name
+nif
+phone
 created_at
 
-=====================================================================
-FORENSIC SNAPSHOT
-=====================================================================
+--------------------------------------------------------------------
 
-snapshot_json must include:
+UserProfile
 
-client identity data
-IP address
-geo location
-ASN
-proxy detection
-VPN detection
-risk score
-browser information
-device fingerprint
-screen resolution
-timezone
-language
-canvas fingerprint
-timestamp
-accepted terms
-term versions
+Fields:
 
-=====================================================================
-CRYPTOGRAPHIC SECURITY
-=====================================================================
+user = models.OneToOneField(User, on_delete=models.CASCADE)
+person = models.OneToOneField(Person, on_delete=models.CASCADE)
 
-Each consent document must generate:
+onboarding_completed = models.BooleanField(default=False)
 
-SHA256(document)
+created_at = models.DateTimeField(auto_now_add=True)
 
-Documents must be digitally signed using PKI.
+====================================================================
+SIGNALS
+====================================================================
 
-Algorithm:
+Create post_save(User) signal.
 
-RSA 4096
+When user is created:
 
-Signature stored in:
+create Person
+create UserProfile
+link them
 
-document_signature
+====================================================================
+SERIALIZERS
+====================================================================
 
-=====================================================================
-TRUSTED TIMESTAMP
-=====================================================================
+PersonSerializer
+UserProfileSerializer
 
-Each document must receive an RFC3161 trusted timestamp.
+UserProfileSerializer must support nested update.
 
-Timestamp providers:
+Updating profile must update Person.
 
-freetsa.org
-DigiCert
-Sectigo
+After update:
 
-Stored in:
+onboarding_completed = True
 
-timestamp_token
+====================================================================
+VIEWSET
+====================================================================
 
-=====================================================================
-MERKLE TREE NOTARIZATION
-=====================================================================
+UserProfileViewSet
 
-Each document hash must be inserted into a Merkle Tree.
+Permission:
 
-Leaf hash stored in:
+IsAuthenticated
 
-merkle_leaf_hash
+Query rules:
 
-Merkle roots generated in batches.
+staff → see all
+user → only their own
 
-Celery job:
+====================================================================
+API ROUTES
+====================================================================
 
-every 30 minutes.
+/api/consent-terms/
+/api/consent-versions/
+/api/user-consents/
+/api/user-consents/status/
 
-=====================================================================
-BLOCKCHAIN ANCHOR
-=====================================================================
+/api/profiles/
 
-Merkle roots must be anchored to public blockchain.
+====================================================================
+ADMIN
+====================================================================
 
-Supported networks:
+Register all models in Django Admin.
 
-Ethereum
-Polygon
+Add useful list_display fields.
 
-Stored in:
+====================================================================
+OUTPUT FORMAT
+====================================================================
 
-blockchain_anchor_tx
+Return the code file-by-file.
 
-=====================================================================
-EVENT CHAIN
-=====================================================================
+Example header:
 
-ConsentEvent implements tamper-evident logging.
+# consents/models.py
+# consents/views.py
+# user_profile/models.py
 
-Each event references the previous event hash.
+Return FULL code.
 
-Events include:
+Do not skip imports.
+Do not omit code.
 
-consent created
-email sent
-consent opened
-consent signed
-consent revoked
-integrity verification
-
-=====================================================================
-TAMPER DETECTION
-=====================================================================
-
-A scheduled Celery job must periodically verify document integrity.
-
-Process:
-
-retrieve document from MinIO
-calculate SHA256
-compare with stored hash
-
-If mismatch detected:
-
-raise security alert
-register forensic event
-
-=====================================================================
-EVIDENCE PACKAGE
-=====================================================================
-
-The system must support generating a forensic evidence package.
-
-Package includes:
-
-PDF document
-SHA256 hash
-PKI signature
-timestamp token
-snapshot JSON
-Merkle proof
-blockchain transaction reference
-
-Format:
-
-ZIP archive
-
-Used for:
-
-court evidence
-regulatory audits
-
-=====================================================================
-PUBLIC VERIFICATION API
-=====================================================================
-
-Endpoint:
-
-POST /api/public/consents/verify
-
-Body:
-
-{
-  "document_hash": "SHA256"
-}
-
-Response:
-
-{
-  "valid": true
-}
-
-=====================================================================
-BACKGROUND TASKS
-=====================================================================
-
-Celery workers must handle:
-
-email sending
-Merkle batch generation
-blockchain anchoring
-tamper detection scanning
-timestamp validation
-evidence packaging
-
-=====================================================================
-FINAL OBJECTIVE
-=====================================================================
-
-Deliver a forensic-grade digital consent platform capable of producing
-legally defensible authorization records.
-
-The system must provide:
-
-immutable evidence
-cryptographic authenticity
-network attribution
-device attribution
-external proof of existence
-long-term archival integrity
+Generate production quality Django code.

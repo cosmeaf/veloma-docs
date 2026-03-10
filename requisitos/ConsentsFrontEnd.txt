@@ -1,0 +1,434 @@
+============================================================
+VEL0MA FRONTEND REQUIREMENT
+Consent Enforcement Integration
+============================================================
+
+Project
+-------
+Veloma Web Frontend
+
+Stack
+-----
+React
+React Router
+Axios
+JWT Authentication
+
+Goal
+----
+Integrate the frontend with the backend legal consent system.
+Users must NOT access the platform until required legal
+documents are accepted.
+
+
+============================================================
+BACKEND BEHAVIOR
+============================================================
+
+The backend already enforces legal consent using middleware.
+
+If a user tries to access a protected endpoint without
+accepting the required terms, the API returns:
+
+HTTP STATUS
+-----------
+403
+
+Response
+--------
+{
+  "error": "consent_required",
+  "missing_terms": ["terms-of-service"]
+}
+
+The frontend must detect this response and redirect
+the user to the consent flow.
+
+
+============================================================
+BACKEND ENDPOINTS
+============================================================
+
+AUTHENTICATION
+--------------
+POST /api/v1/auth/login/
+POST /api/v1/auth/register/
+POST /api/v1/auth/logout/
+POST /api/v1/auth/refresh/
+GET  /api/v1/auth/me/
+
+
+CONSENT SYSTEM
+--------------
+GET  /api/v1/consent-terms/
+GET  /api/v1/consent-versions/
+GET  /api/v1/user-consents/
+POST /api/v1/user-consents/
+GET  /api/v1/user-consents/status/
+
+
+USER PROFILE
+------------
+GET /api/v1/profiles/
+
+
+============================================================
+REQUIRED FRONTEND BEHAVIOR
+============================================================
+
+Login Flow
+----------
+
+login
+↓
+store JWT tokens
+↓
+call /api/v1/user-consents/status/
+↓
+if accepted_all = true
+    redirect to dashboard
+else
+    redirect to consent screen
+
+
+============================================================
+GLOBAL CONSENT ENFORCEMENT
+============================================================
+
+The frontend must intercept the error:
+
+403 consent_required
+
+When detected:
+
+redirect → /consents
+
+The user must not access protected routes until
+all required documents are accepted.
+
+
+============================================================
+PAGES TO IMPLEMENT
+============================================================
+
+1) CONSENT REQUIRED PAGE
+
+Route
+-----
+/consents
+
+Purpose
+-------
+Force the user to accept required legal documents.
+
+Responsibilities
+----------------
+Fetch required documents
+Display document content
+Require scrolling to bottom
+Require checkbox acceptance
+Submit consent to backend
+
+
+------------------------------------------------------------
+
+2) CONSENT DOCUMENT VIEWER
+
+Each document must display:
+
+title
+version
+content
+
+
+Example
+
+Terms of Service
+Version: v1
+
+<full legal document text>
+
+
+============================================================
+DOCUMENT DISPLAY REQUIREMENTS
+============================================================
+
+Scrollable Container
+--------------------
+
+Legal text must appear inside a scrollable container.
+
+Example
+
+max-height: 400px
+overflow-y: scroll
+
+
+------------------------------------------------------------
+
+Scroll Requirement
+------------------
+
+The checkbox must only activate after the user
+scrolls to the bottom.
+
+Logic Example
+
+onScroll:
+    if scrollPosition >= bottom
+        enable checkbox
+
+
+============================================================
+ACCEPTANCE UI
+============================================================
+
+Each document must show a checkbox:
+
+[ ] I have read and accept the Terms of Service
+
+
+The ACCEPT button must remain disabled until:
+
+all required documents are checked.
+
+
+============================================================
+SUBMIT CONSENT
+============================================================
+
+When the user clicks ACCEPT:
+
+Frontend must call:
+
+POST /api/v1/user-consents/
+
+
+Payload Example
+
+{
+  "version": <version_id>
+}
+
+One request per document.
+
+
+============================================================
+AFTER CONSENT
+============================================================
+
+After successful submission:
+
+clear consent_required flag
+redirect → dashboard
+
+
+Dashboard route depends on role:
+
+admin → /admin
+staff → /staff
+user  → /dashboard
+
+
+============================================================
+SECURITY REQUIREMENTS
+============================================================
+
+The consent screen must NOT be bypassable.
+
+If the user manually navigates to:
+
+/dashboard
+/admin
+/profile
+
+The system must redirect back to:
+
+/consents
+
+until all required documents are accepted.
+
+
+============================================================
+FRONTEND ARCHITECTURE CHANGES
+============================================================
+
+AXIOS LAYER
+-----------
+
+File
+src/api/axios.js
+
+Must intercept:
+
+403 consent_required
+
+And redirect to:
+
+/consents
+
+
+------------------------------------------------------------
+
+AUTH CONTEXT
+------------
+
+File
+src/context/AuthContext.jsx
+
+Login and register must check:
+
+/api/v1/user-consents/status/
+
+To determine next route.
+
+
+------------------------------------------------------------
+
+ROUTER
+------
+
+File
+src/routes/routesConfig.jsx
+
+Add route:
+
+/consents
+
+This route requires authentication.
+
+
+============================================================
+NEW COMPONENTS TO CREATE
+============================================================
+
+Directory
+---------
+src/pages/consents
+
+
+Required Files
+--------------
+
+ConsentRequired.jsx
+ConsentDocument.jsx
+ConsentCheckbox.jsx
+ConsentFooter.jsx
+
+
+------------------------------------------------------------
+
+ConsentRequired.jsx
+
+Main consent page responsible for:
+
+fetch pending documents
+display documents
+handle acceptance
+submit to backend
+redirect after success
+
+
+------------------------------------------------------------
+
+ConsentDocument.jsx
+
+Displays:
+
+document title
+version
+scrollable content
+
+
+------------------------------------------------------------
+
+ConsentCheckbox.jsx
+
+Checkbox that activates only after scrolling.
+
+
+------------------------------------------------------------
+
+ConsentFooter.jsx
+
+Submit button and confirmation actions.
+
+
+============================================================
+USER EXPERIENCE REQUIREMENTS
+============================================================
+
+The consent screen must resemble a legal onboarding page.
+
+Layout Example
+
+Title
+Description
+
+Document 1
+Scrollable text
+Checkbox
+
+Document 2
+Scrollable text
+Checkbox
+
+Accept Button
+
+
+============================================================
+EDGE CASES
+============================================================
+
+Token Expired
+-------------
+
+401 → refresh token
+
+
+Consent Required
+----------------
+
+403 → redirect /consents
+
+
+Logout
+------
+
+clear tokens
+redirect /auth/login
+
+
+============================================================
+FINAL FLOW
+============================================================
+
+register
+↓
+login
+↓
+check consent status
+↓
+consent screen
+↓
+accept documents
+↓
+dashboard access
+
+
+============================================================
+IMPLEMENTATION GOAL
+============================================================
+
+No authenticated user must access the system
+without accepting required legal documents.
+
+This rule must be enforced by:
+
+1) backend middleware
+2) frontend routing
+3) axios interceptors
+
+============================================================
+END OF REQUIREMENT
+============================================================
